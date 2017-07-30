@@ -25,11 +25,12 @@ const stopPlaying = () => {
 }
 
 const startPlaying = () => {
-  start = Date.now()
+  start = pause ? Date.now() - (pause - start) : Date.now()
+  pause = null
   timer = setInterval(() => {
     $('#time').textContent = parseInt((Date.now() - start) / 1000)
   }, 200)
-  $('#time').textContent = '0'
+  $('#time').textContent = parseInt((Date.now() - start) / 1000)
 }
 
 const updateButtons = () => {
@@ -38,15 +39,19 @@ const updateButtons = () => {
   $('#stop').classList.toggle('active', status === 'stop')
 }
 
+const stopPart = part => {
+  sources[part].stop()
+  sources[part].disconnect()
+  sources[part] = null
+}
+
 const play = part => {
   if (enableds[part]) {
     enableds[part] = false
     nodes[part].classList.remove('playing')
 
     if (status === 'play') {
-      sources[part].stop()
-      sources[part].disconnect()
-      sources[part] = null
+      stopPart(part)
 
       if (!stuff.filter(p => enableds[p]).length) {
         stopPlaying()
@@ -106,30 +111,43 @@ const makeButtons = () => {
     node.textContent = part
     $('#root').appendChild(node)
   })
+
+  $('#play').onmousedown = () => {
+    if (status === 'play') return
+    status = 'play'
+    updateButtons()
+    startPlaying()
+    stuff.forEach(part => {
+      if (enableds[part]) startPart(part)
+    })
+  }
+
+  $('#pause').onmousedown = () => {
+    if (status === 'pause') return
+    if (status === 'play') {
+      pause = Date.now()
+      stuff.forEach(part => {
+        if (enableds[part]) stopPart(part)
+      })
+      clearInterval(timer)
+    }
+    status = 'pause'
+    updateButtons()
+  }
+
+  $('#stop').onmousedown = () => {
+    if (status === 'stop') return
+    pause = null
+    if (status === 'play') {
+      stopPlaying()
+      stuff.forEach(part => {
+        if (enableds[part]) stopPart(part)
+      })
+    }
+    status = 'stop'
+    updateButtons()
+  }
 }
 
-// TODO maybe a global play / pause button
-
 makeButtons()
-
-
-
-/*
-Promise.all(stuff.map(part => fetch(`./mp3s/munamux ${part}.mp3`)
-  .then(res => res.arrayBuffer())
-  .then(arrayBuffer => context.decodeAudioData(arrayBuffer))
-  .then(buffer => buffers[part] = buffer)
-)).then(() => {
-  stuff.forEach(part => {
-    const node = document.createElement('button')
-    nodes[part] = node
-    node.className = 'button'
-    node.onmousedown = () => {
-      play(part)
-    }
-    node.textContent = part
-    $('#root').appendChild(node)
-  })
-})
-*/
 
