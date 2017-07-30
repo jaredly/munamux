@@ -1,0 +1,31 @@
+
+#root {
+    padding: 0 8px;
+}
+
+.button {
+    margin: 8px;
+    padding: 8px 16px;
+    border-radius: 4px;
+    border: none;
+    background-color: white;
+    cursor: pointer;
+    background-color: #dedede;
+}
+
+.button:hover {
+    background-color: #eee;
+}
+
+.playing {
+    background-color: #5f7;
+}
+.playing:hover {
+    background-color: #5f7;
+}
+
+#time {
+    padding: 16px;
+}
+
+
