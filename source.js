@@ -10,31 +10,68 @@ const sources = {}
 const nodes = {}
 const loading = {}
 
+const enableds = {}
+
 let start = null
+let pause = null
 let timer = null
 
-const play = part => {
-  if (sources[part]) {
-    nodes[part].classList.remove('playing')
-    sources[part].stop()
-    sources[part].disconnect()
-    sources[part] = null
-    if (!stuff.filter(p => sources[p]).length) {
-      start = null
-      clearInterval(timer)
-      $('#time').textContent = ''
-    }
-    return
-  }
-  if (start === null) {
-    start = Date.now()
-    timer = setInterval(() => {
-      $('#time').textContent = parseInt((Date.now() - start) / 1000)
-    }, 200)
-    $('#time').textContent = parseInt((Date.now() - start) / 1000)
-  }
+let status = 'play'
 
-  nodes[part].classList.add('playing')
+const stopPlaying = () => {
+  start = null
+  clearInterval(timer)
+  $('#time').textContent = ''
+}
+
+const startPlaying = () => {
+  start = Date.now()
+  timer = setInterval(() => {
+    $('#time').textContent = parseInt((Date.now() - start) / 1000)
+  }, 200)
+  $('#time').textContent = '0'
+}
+
+const updateButtons = () => {
+  $('#play').classList.toggle('active', status === 'play')
+  $('#pause').classList.toggle('active', status === 'pause')
+  $('#stop').classList.toggle('active', status === 'stop')
+}
+
+const play = part => {
+  if (enableds[part]) {
+    enableds[part] = false
+    nodes[part].classList.remove('playing')
+
+    if (status === 'play') {
+      sources[part].stop()
+      sources[part].disconnect()
+      sources[part] = null
+
+      if (!stuff.filter(p => enableds[p]).length) {
+        stopPlaying()
+        $('#controls').classList.add('hidden')
+      }
+    } else if (!stuff.filter(p => enableds[p]).length) {
+      $('#controls').classList.add('hidden')
+      status = 'play'
+      updateButtons()
+    }
+  } else {
+    nodes[part].classList.add('playing')
+    enableds[part] = true
+
+    if (status === 'play') {
+      if (start === null) {
+        startPlaying()
+        $('#controls').classList.remove('hidden')
+      }
+      startPart(part)
+    }
+  }
+}
+
+const startPart = part => {
   const source = context.createBufferSource()
   sources[part] = source
   source.buffer = buffers[part]
@@ -58,6 +95,7 @@ const makeButtons = () => {
   stuff.forEach(part => {
     const node = document.createElement('button')
     nodes[part] = node
+    enableds[part] = false
     node.className = 'button'
     node.onmousedown = () => {
       if (buffers[part]) return play(part)

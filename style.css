@@ -17,6 +17,18 @@
     background-color: #eee;
 }
 
+.hidden {
+    display: none;
+}
+
+#controls button {
+    background-color: white;
+}
+
+#controls button.active {
+    background-color: #aaa;
+}
+
 .playing {
     background-color: #5f7;
 }
